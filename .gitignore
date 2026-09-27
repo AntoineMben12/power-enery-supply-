@@ -1,0 +1,17 @@
+# Dependencies and generated output
+node_modules/
+dist/
+
+# Local environment and editor state
+.env
+.env.*
+!.env.example
+.qodo/
+
+# Local user records contain personal data and password hashes
+server/data/accounts.json
+
+# Personal media shared alongside the project
+WhatsApp Audio *.ogg
+WhatsApp Ptt *.ogg
+WhatsApp Image *.jpeg
