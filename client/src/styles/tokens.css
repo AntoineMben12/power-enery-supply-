@@ -1,0 +1,168 @@
+/**
+ * PowerWatch design tokens.
+ *
+ * The single source of truth for colour, type, space, radius, elevation and
+ * motion. Every other stylesheet consumes these variables, so the whole product
+ * can be re-themed from this file alone.
+ *
+ * Breakpoints (kept as literals in media queries, CSS variables cannot be used
+ * there) — 320 / 375 / 390 / 480 / 768 / 1024 / 1280 / 1440+  :
+ *   @media (min-width: 480px)   small phone landscape, large phone
+ *   @media (min-width: 768px)   tablet, shell leaves single-column mode
+ *   @media (min-width: 1024px)  desktop
+ *   @media (min-width: 1280px)  wide desktop
+ */
+
+:root {
+  color-scheme: light;
+
+  /* ---- Brand: PowerWatch teal ------------------------------------------ */
+  --brand-50: #ecfeff;
+  --brand-100: #cffafe;
+  --brand-200: #a5f3fc;
+  --brand-300: #67e8f9;
+  --brand-400: #22d3ee;
+  --brand-500: #06b6d4;
+  --brand-600: #0891b2;
+  --brand-700: #0e7490;
+  --brand-800: #155e75;
+  --brand-900: #164e63;
+  --brand-950: #083344;
+
+  /* ---- Neutrals -------------------------------------------------------- */
+  --neutral-0: #ffffff;
+  --neutral-50: #f8fafc;
+  --neutral-100: #f1f5f9;
+  --neutral-200: #e2e8f0;
+  --neutral-300: #cbd5e1;
+  --neutral-400: #94a3b8;
+  --neutral-500: #64748b;
+  --neutral-600: #475569;
+  --neutral-700: #334155;
+  --neutral-800: #1e293b;
+  --neutral-900: #0f172a;
+  --neutral-950: #020617;
+
+  /* ---- Semantic feedback (meaning is fixed product-wide) --------------- */
+  --success: #15803d;
+  --success-bg: #f0fdf4;
+  --success-border: #bbf7d0;
+  --warning: #b45309;
+  --warning-bg: #fffbeb;
+  --warning-border: #fde68a;
+  --danger: #b91c1c;
+  --danger-bg: #fef2f2;
+  --danger-border: #fecaca;
+  --info: #0e7490;
+  --info-bg: #ecfeff;
+  --info-border: #a5f3fc;
+  --neutral: #475569;
+  --neutral-bg: #f8fafc;
+  --neutral-border: #e2e8f0;
+
+  /* ---- Severity ramp (always paired with a text label) ----------------- */
+  --sev-low: #0e7490;
+  --sev-low-bg: #ecfeff;
+  --sev-low-border: #a5f3fc;
+  --sev-medium: #b45309;
+  --sev-medium-bg: #fffbeb;
+  --sev-medium-border: #fde68a;
+  --sev-high: #c2410c;
+  --sev-high-bg: #fff7ed;
+  --sev-high-border: #fed7aa;
+  --sev-critical: #b91c1c;
+  --sev-critical-bg: #fef2f2;
+  --sev-critical-border: #fecaca;
+
+  /* ---- Surfaces & text ------------------------------------------------- */
+  --canvas: var(--neutral-100);
+  --surface: var(--neutral-0);
+  --surface-sunken: var(--neutral-50);
+  --surface-chrome: var(--brand-900);
+  --surface-chrome-deep: var(--brand-950);
+  --surface-overlay: rgb(15 23 42 / 0.55);
+
+  --border: var(--neutral-200);
+  --border-strong: var(--neutral-300);
+
+  --text-strong: var(--neutral-900);
+  --text: #1e293b;
+  --text-muted: #64748b;
+  --text-subtle: #94a3b8;
+  --text-on-brand: #ffffff;
+  --text-chrome: #e2e8f0;
+  --text-chrome-muted: #9dbcc6;
+
+  /* ---- Focus ----------------------------------------------------------- */
+  --focus-ring: 0 0 0 3px rgb(14 116 144 / 0.32);
+  --focus-ring-danger: 0 0 0 3px rgb(185 28 28 / 0.3);
+
+  /* ---- Typography ------------------------------------------------------ */
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "Cascadia Mono", Menlo, monospace;
+
+  --size-display: 1.875rem;
+  --size-title: 1.4375rem;
+  --size-section: 1.0625rem;
+  --size-card: 0.9375rem;
+  --size-body: 0.9375rem;
+  --size-sm: 0.8125rem;
+  --size-caption: 0.75rem;
+
+  --leading-tight: 1.2;
+  --leading-snug: 1.35;
+  --leading-body: 1.6;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* ---- Spacing scale (4px base) ---------------------------------------- */
+  --space-0: 0;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* ---- Radius (kept modest: no pill-shaped cards) ---------------------- */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 999px;
+
+  /* ---- Elevation ------------------------------------------------------- */
+  --shadow-xs: 0 1px 2px rgb(15 23 42 / 0.06);
+  --shadow-sm: 0 1px 3px rgb(15 23 42 / 0.1), 0 1px 2px rgb(15 23 42 / 0.06);
+  --shadow-md: 0 4px 12px rgb(15 23 42 / 0.1);
+  --shadow-lg: 0 12px 32px rgb(15 23 42 / 0.16);
+
+  /* ---- Motion ---------------------------------------------------------- */
+  --duration-fast: 120ms;
+  --duration-base: 180ms;
+  --duration-slow: 260ms;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* ---- Layout ---------------------------------------------------------- */
+  --sidebar-w: 244px;
+  --shell-max: 1440px;
+  --topbar-h: 60px;
+  --bottomnav-h: 62px;
+  --tap-min: 44px;
+  --content-pad: var(--space-4);
+
+  /* ---- Z-index --------------------------------------------------------- */
+  --z-map-overlay: 500;
+  --z-sticky: 800;
+  --z-nav: 900;
+  --z-drawer: 1000;
+  --z-modal: 1100;
+  --z-toast: 1200;
+}

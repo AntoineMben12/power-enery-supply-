@@ -1,7 +1,7 @@
 /**
  * Authentication endpoints.
  *
- * POST /api/auth/register   public   — creates a citizen account only
+ * POST http://localhost:4000/api/auth/register   public   — creates a citizen account only
  * POST /api/auth/login      public
  * POST /api/auth/logout     auth     — stateless: the client drops the token
  * GET  /api/auth/me         auth     — re-reads the account behind the token
