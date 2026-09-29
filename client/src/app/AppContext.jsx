@@ -48,10 +48,22 @@ export function AppProvider({ children }) {
     return () => window.removeEventListener(SESSION_EXPIRED_EVENT, onExpired);
   }, []);
 
-  const signIn = useCallback((session) => {
+  const signIn = useCallback(async (session) => {
     saveSession(session);
     setAuthNotice("");
     setUser(session.user);
+    // `/auth/login` returns the raw account row. `/auth/me` resolves it into the
+    // shape the UI reads — `role`, `name` and, for a crew, `company`. Fetching it
+    // once here means no screen has to guess which shape it was given.
+    try {
+      const fresh = await authApi.me();
+      if (fresh?.user) {
+        saveSession({ user: fresh.user });
+        setUser(fresh.user);
+      }
+    } catch {
+      /* the session from the login response is still usable */
+    }
   }, []);
 
   const signOut = useCallback(async () => {

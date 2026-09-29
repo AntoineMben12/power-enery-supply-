@@ -176,6 +176,33 @@ export function FilterBar({ children, summary, actions }) {
   );
 }
 
+export function SearchInput({ value, onChange, placeholder = "Search", label = "Search" }) {
+  return (
+    <div className="search">
+      <Search size={16} aria-hidden="true" />
+      <input
+        type="search"
+        className="control"
+        value={value}
+        aria-label={label}
+        placeholder={placeholder}
+        onChange={(event) => onChange(event.target.value)}
+      />
+      {value ? (
+        <button
+          type="button"
+          className="btn btn--ghost btn--icon btn--sm"
+          style={{ position: "absolute", right: 4 }}
+          onClick={() => onChange("")}
+          aria-label="Clear search"
+        >
+          <X size={14} aria-hidden="true" />
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
 /* ---- tabs -------------------------------------------------------------- */
 
 export function Tabs({ tabs, value, onChange, label = "Sections" }) {
