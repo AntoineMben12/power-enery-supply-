@@ -3,6 +3,8 @@
  * routes over real HTTP, then shuts it down. Scratch tool: node scripts/_boot-check.js
  */
 const { spawn } = require("child_process");
+const path = require("path");
+require("dotenv").config({ path: path.join(__dirname, "..", ".env") });
 
 const port = 4199;
 const base = `http://127.0.0.1:${port}`;
