@@ -1,0 +1,18 @@
+24:  nodeEnv: process.env.NODE_ENV || "development",
+27:    host: process.env.MYSQL_HOST || "localhost",
+29:    user: process.env.MYSQL_USER || "root",
+30:    password: process.env.MYSQL_PASSWORD || "",
+31:    database: process.env.MYSQL_DATABASE || "eneo_outage"
+41:    password: process.env.ADMIN_PASSWORD || "",
+42:    name: process.env.ADMIN_FULL_NAME || "SOCADEL Administrator"
+51:    secret: process.env.JWT_SECRET || (process.env.NODE_ENV === "production" ? "" : crypto.randomBytes(32).toString("hex")),
+52:    issuer: process.env.JWT_ISSUER || "powerwatch"
+55:  subcontractorName: process.env.SUBCONTRACTOR_NAME || "SOCADEL Field Agent",
+57:  geminiApiKey: process.env.GEMINI_API_KEY || "",
+58:  fcmServerKey: process.env.FCM_SERVER_KEY || "",
+60:    host: process.env.SMTP_HOST || "",
+62:    user: process.env.SMTP_USER || "",
+63:    password: process.env.SMTP_PASSWORD || "",
+64:    from: process.env.MAIL_FROM || ""
+80:  db: { ...env.mysql, bootstrap: process.env.DB_BOOTSTRAP !== "false" },
+83:    strict: process.env.STORAGE_STRICT === "true" || (env.nodeEnv === "production" && driver !== "memory")

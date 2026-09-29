@@ -9,7 +9,11 @@
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
     "serve": "concurrently \"node server/index.js\" \"vite preview --host 0.0.0.0\"",
-    "start": "node server/index.js"
+    "start": "node server/index.js",
+    "test": "node --test server/tests",
+    "test:watch": "node --test --watch server/tests",
+    "audit:store": "node scripts/audit-store.js",
+    "audit:server": "node scripts/audit-duplicates.js server"
   },
   "dependencies": {
     "@maplibre/maplibre-gl-leaflet": "^0.1.4",
