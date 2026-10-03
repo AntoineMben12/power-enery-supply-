@@ -8,7 +8,8 @@
  * other.
  */
 
-import { BadgeCheck } from "lucide-react";
+import { useState } from "react";
+import { BadgeCheck, PanelLeftClose, PanelLeftOpen, Zap } from "lucide-react";
 import { CountPill } from "../ui/Badge.jsx";
 
 /**
@@ -29,6 +30,7 @@ export function AppShell({
   children,
   contentLabel = "Main content"
 }) {
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const bottomItems = bottomKeys
     .map((key) => items.find((item) => item.key === key))
     .filter(Boolean);
@@ -42,7 +44,7 @@ export function AppShell({
   }
 
   return (
-    <div className="shell">
+    <div className={`shell ${sidebarCollapsed ? "shell--sidebar-collapsed" : ""}`}>
       <a className="skip-link" href="#main-content">
         Skip to main content
       </a>
@@ -57,7 +59,19 @@ export function AppShell({
             <span>{brand.subtitle}</span>
           </span>
         </div>
-        {topbarActions ? <div className="shell__topbar-actions">{topbarActions}</div> : null}
+
+        <div className="shell__topbar-actions">
+          <button
+            type="button"
+            className="shell__collapse-toggle"
+            aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            onClick={() => setSidebarCollapsed((value) => !value)}
+          >
+            {sidebarCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+          </button>
+          {topbarActions}
+        </div>
       </header>
 
       <div className="shell__body">
@@ -74,6 +88,7 @@ export function AppShell({
                     className="sidebar-link"
                     aria-current={item.key === active ? "page" : undefined}
                     onClick={() => onNavigate(item.key)}
+                    title={sidebarCollapsed ? item.label : undefined}
                   >
                     {Icon ? <Icon size={17} aria-hidden="true" /> : null}
                     <span>{item.label}</span>

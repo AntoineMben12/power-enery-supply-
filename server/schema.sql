@@ -26,6 +26,9 @@ CREATE TABLE IF NOT EXISTS app_users (
   INDEX idx_app_users_active (is_active)
 ) ENGINE=InnoDB;
 
+show tables;
+
+
 -- Operational zones group incidents and scope what each operator manages.
 CREATE TABLE IF NOT EXISTS zones (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

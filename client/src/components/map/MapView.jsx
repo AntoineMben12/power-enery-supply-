@@ -352,17 +352,6 @@ export function LocationPicker({ value, onChange, centre, zoom = 11, label = "Ta
 }
 
 export function MapAttribution() {
-  return (
-    <p className="map-attribution">
-      Map tiles:{" "}
-      <a href="https://openfreemap.org/" target="_blank" rel="noreferrer">
-        OpenFreeMap
-      </a>{" "}
-      · © OpenMapTiles · ©{" "}
-      <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">
-        OpenStreetMap contributors
-      </a>
-    </p>
-  );
+  return null;
 }
 
