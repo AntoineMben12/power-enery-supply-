@@ -8,6 +8,7 @@
  */
 
 const { normalizeIncident, normalizeReport, normalizeRow } = require("./normalize");
+const { distanceMeters } = require("../domain/geo");
 
 const toMysql = value => {
   if (value === undefined) return null;
@@ -344,6 +345,25 @@ class MySqlStore {
     const { sql, params } = insertSql("zones", data);
     const result = await this.query(sql, params);
     return this.one("SELECT * FROM zones WHERE id = ? LIMIT 1", [result.insertId]);
+  }
+
+  /**
+   * The zone whose circle contains a point.
+   *
+   * The PostgreSQL store answers this with a PostGIS `ST_DWithin` query; here the
+   * same arithmetic runs over the (small) zone table so both engines agree.
+   */
+  async findZoneForPoint(point) {
+    const latitude = Number(point && point.latitude);
+    const longitude = Number(point && point.longitude);
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+    const zones = await this.listZones();
+    let best = null;
+    for (const zone of zones) {
+      const distance = distanceMeters(latitude, longitude, Number(zone.latitude), Number(zone.longitude));
+      if (distance <= Number(zone.radius_m) && (!best || distance < best.distance)) best = { zone, distance };
+    }
+    return best ? best.zone : null;
   }
 
   async updateZone(id, data) {

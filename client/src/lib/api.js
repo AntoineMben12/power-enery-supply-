@@ -10,7 +10,15 @@
 
 import { getToken, clearSession } from "./session.js";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:4000/api";
+/**
+ * The base URL is injected by Vite from VITE_API_BASE.
+ *
+ * `import.meta.env` only exists inside a bundler, so it is read defensively: the
+ * module stays importable from plain Node, which is what lets the test suite load
+ * `authApi` and assert on the requests it builds.
+ */
+const ENV = import.meta.env || {};
+const API_BASE = ENV.VITE_API_BASE || "http://localhost:4000/api";
 
 export const SESSION_EXPIRED_EVENT = "powerwatch:session-expired";
 

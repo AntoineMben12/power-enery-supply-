@@ -11,7 +11,7 @@
  */
 
 const { matchIncident, recalcCluster, nextReference, normalizeConfig } = require("../domain/clustering");
-const { distanceMeters, isInsideCameroon } = require("../domain/geo");
+const { isInsideCameroon } = require("../domain/geo");
 const { hashReporterKey } = require("../domain/passwords");
 const lifecycle = require("../domain/incidentLifecycle");
 const { badRequest, notFound, conflict } = require("../http/errors");
@@ -48,15 +48,15 @@ function createIncidentService({ store, config }) {
     return normalizeConfig(parsed, normalizeConfig(config.cluster));
   }
 
-  /** Attaches a report to the zone whose circle contains it, when configured. */
-  async function zoneForPoint(point) {
-    const zones = await store.listZones();
-    let best = null;
-    for (const zone of zones) {
-      const distance = distanceMeters(point.latitude, point.longitude, Number(zone.latitude), Number(zone.longitude));
-      if (distance <= Number(zone.radius_m) && (!best || distance < best.distance)) best = { zone, distance };
-    }
-    return best ? best.zone : null;
+  /**
+   * Attaches a report to the zone whose circle contains it, when configured.
+   *
+   * The store owns the spatial lookup: PostgreSQL answers it with an indexed
+   * PostGIS `ST_DWithin`, the other engines apply the same arithmetic in JS, so
+   * the result is identical whichever database is attached.
+   */
+  async function zoneForPoint(executor, point) {
+    return executor.findZoneForPoint(point);
   }
 
   async function requireIncident(executor, id) {
@@ -390,14 +390,18 @@ function createIncidentService({ store, config }) {
 
     return store.transaction(async tx => {
       const candidates = await tx.findClusterCandidates({
-        sinceIso: new Date(now - settings.cluster_window_minutes * 60_000).toISOString()
+        sinceIso: new Date(now - settings.cluster_window_minutes * 60_000).toISOString(),
+        // PostgreSQL narrows these candidates with an indexed PostGIS radius
+        // query; the other engines ignore the extra hints and filter in memory.
+        point,
+        radiusMeters: settings.cluster_distance_m
       });
       const match = matchIncident(candidates, point, settings, now);
 
       let incident = match ? match.incident : null;
       const isNew = !incident;
       if (!incident) {
-        const zone = await zoneForPoint(point);
+        const zone = await zoneForPoint(tx, point);
         incident = await tx.createIncident({
           reference: nextReference(),
           title: `${category} reported in ${district}`,

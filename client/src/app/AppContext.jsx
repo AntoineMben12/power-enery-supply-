@@ -7,7 +7,7 @@
  */
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { SESSION_EXPIRED_EVENT, authApi, publicApi } from "../lib/api.js";
+import { SESSION_EXPIRED_EVENT, authApi, incidentsApi, publicApi } from "../lib/api.js";
 import { usePoll } from "../lib/hooks.js";
 import { clearSession, getStoredUser, getToken, ROLES, saveSession } from "../lib/session.js";
 
@@ -15,24 +15,40 @@ const AppContext = createContext(null);
 
 const REFRESH_MS = 15_000;
 
+/** Roles allowed to read the richer console incident rows. */
+const STAFF_ROLES = [ROLES.OPERATOR, ROLES.AGENT];
+
 export function AppProvider({ children }) {
   const [user, setUser] = useState(() => (getToken() ? getStoredUser() : null));
   const [authNotice, setAuthNotice] = useState("");
+  const role = user?.role || user?.user_role || null;
 
+  /**
+   * The public feed is deliberately coarse: no zone tags, no first-report time,
+   * no reporter data. Staff screens need the fuller console rows, so the source
+   * follows the signed-in role and falls back to the public feed if the staff
+   * request is refused. Privacy is unchanged — the server decides, not this code.
+   */
   const feed = usePoll(
     async () => {
-      const [config, incidents, announcements] = await Promise.all([
-        publicApi.config(),
-        publicApi.incidents(),
-        publicApi.announcements()
-      ]);
-      return {
-        config,
-        incidents: incidents.incidents || [],
-        announcements: announcements.announcements || []
-      };
+      const [config, announcements] = await Promise.all([publicApi.config(), publicApi.announcements()]);
+      const isStaff = user && STAFF_ROLES.includes(role);
+
+      let incidents = [];
+      if (isStaff) {
+        try {
+          incidents = (await incidentsApi.list({})).incidents || [];
+        } catch {
+          incidents = (await publicApi.incidents()).incidents || [];
+        }
+      } else {
+        incidents = (await publicApi.incidents()).incidents || [];
+      }
+
+      return { config, incidents, announcements: announcements.announcements || [] };
     },
-    REFRESH_MS
+    REFRESH_MS,
+    [role]
   );
 
   /**
@@ -46,6 +62,25 @@ export function AppProvider({ children }) {
     };
     window.addEventListener(SESSION_EXPIRED_EVENT, onExpired);
     return () => window.removeEventListener(SESSION_EXPIRED_EVENT, onExpired);
+  }, []);
+
+  /** Re-reads the cached account once on load so a stored session carries role/name. */
+  useEffect(() => {
+    if (!getToken()) return;
+    let cancelled = false;
+    authApi
+      .me()
+      .then((result) => {
+        if (cancelled || !result?.user) return;
+        saveSession({ user: result.user });
+        setUser(result.user);
+      })
+      .catch(() => {
+        /* the session-expired listener handles a rejected token */
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const signIn = useCallback(async (session) => {

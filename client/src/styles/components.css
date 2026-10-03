@@ -260,11 +260,14 @@ select.control {
    Card, surface and layout helpers
    ======================================================================= */
 
-.card {
-  background: var(--surface);
+.card,
+.panel,
+.surface,
+[data-card] {
+  background: linear-gradient(180deg, rgba(16, 43, 95, 0.95), rgba(10, 22, 45, 0.96));
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-xs);
+  box-shadow: var(--shadow-sm);
 }
 
 .card--pad {
@@ -530,4 +533,14 @@ select.control {
 .stat--interactive:hover {
   border-color: var(--brand-300);
   box-shadow: var(--shadow-sm);
+}
+
+.link,
+a {
+  color: var(--accent-300);
+}
+
+.link:hover,
+a:hover {
+  color: var(--accent-200);
 }

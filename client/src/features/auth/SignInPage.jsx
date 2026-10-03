@@ -9,21 +9,20 @@
 
 import { useState } from "react";
 import { BadgeCheck, LogIn, ShieldCheck, UserPlus, Wrench } from "lucide-react";
-import { authApi } from "../../lib/api.js";
 import { ROLES, ROLE_LABEL } from "../../lib/session.js";
 import { Alert, Button, Card, TextInput } from "../../components/ui/index.js";
-
-const ROLE_HOME = {
-  [ROLES.CITIZEN]: "/client",
-  [ROLES.AGENT]: "/agency",
-  [ROLES.OPERATOR]: "/admin"
-};
-
-const ROLE_INTRO = {
-  [ROLES.CITIZEN]: "Report outages, follow your cases and see what is happening near you.",
-  [ROLES.AGENT]: "Open your assigned work orders and report progress from the field.",
-  [ROLES.OPERATOR]: "Validate clusters, dispatch crews and monitor the network."
-};
+import {
+  MIN_PASSWORD_LENGTH,
+  REGISTER,
+  ROLE_HOME,
+  ROLE_INTRO,
+  SIGN_IN,
+  canSelfRegister,
+  headingFor,
+  submitCredentials,
+  toggleMode,
+  validateCredentials
+} from "./authForm.js";
 
 const ROLE_ICON = {
   [ROLES.CITIZEN]: BadgeCheck,
@@ -31,28 +30,45 @@ const ROLE_ICON = {
   [ROLES.OPERATOR]: ShieldCheck
 };
 
-export function SignInPage({ role = ROLES.OPERATOR, notice = "", onSignedIn }) {
-  const [mode, setMode] = useState("signin");
+/**
+ * @param initialMode SIGN_IN or REGISTER. Exposed so a deep link can open the
+ *                    registration form directly, and so tests can render it.
+ */
+export function SignInPage({ role = ROLES.OPERATOR, notice = "", onSignedIn, initialMode = SIGN_IN }) {
+  const [mode, setMode] = useState(initialMode);
   const [username, setUsername] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [busy, setBusy] = useState(false);
 
-  const canRegister = role === ROLES.CITIZEN;
+  const canRegister = canSelfRegister(role);
   const RoleIcon = ROLE_ICON[role] || BadgeCheck;
+  const draft = { mode, role, username, password, fullName, phone };
+
+  /** Clearing a message as soon as the field is edited stops the form nagging. */
+  function edit(field, value) {
+    if (field === "username") setUsername(value);
+    else if (field === "password") setPassword(value);
+    else if (field === "fullName") setFullName(value);
+    else if (field === "phone") setPhone(value);
+
+    setFieldErrors((current) => (current[field] ? { ...current, [field]: undefined } : current));
+  }
 
   async function submit(event) {
     event.preventDefault();
-    setBusy(true);
+
+    const problems = validateCredentials(draft);
+    setFieldErrors(problems);
     setError("");
+    if (Object.keys(problems).length) return;
+
+    setBusy(true);
     try {
-      const result =
-        mode === "register"
-          ? await authApi.register({ username, password, fullName, phone: phone || undefined })
-          : await authApi.login({ username, password, role });
-      onSignedIn(result);
+      onSignedIn(await submitCredentials(draft));
     } catch (caught) {
       setError(caught.message);
     } finally {
@@ -96,12 +112,8 @@ export function SignInPage({ role = ROLES.OPERATOR, notice = "", onSignedIn }) {
         </div>
 
         <div className="auth__heading">
-          <p className="eyebrow">
-            {ROLE_LABEL[role]} workspace
-          </p>
-          <h1 className="page-title">
-            {mode === "register" ? "Create your citizen account" : `Sign in as ${ROLE_LABEL[role].toLowerCase()}`}
-          </h1>
+          <p className="eyebrow">{ROLE_LABEL[role]} workspace</p>
+          <h1 className="page-title">{headingFor(mode, ROLE_LABEL[role])}</h1>
           <p className="text-secondary">{ROLE_INTRO[role]}</p>
         </div>
 
@@ -112,14 +124,15 @@ export function SignInPage({ role = ROLES.OPERATOR, notice = "", onSignedIn }) {
         ) : null}
 
         <form className="auth__form" onSubmit={submit} noValidate>
-          {mode === "register" ? (
+          {mode === REGISTER ? (
             <>
               <TextInput
                 label="Full name"
                 name="name"
                 autoComplete="name"
                 value={fullName}
-                onChange={(event) => setFullName(event.target.value)}
+                onChange={(event) => edit("fullName", event.target.value)}
+                error={fieldErrors.fullName}
                 required
                 maxLength={120}
                 placeholder="e.g. Aida Ngombe"
@@ -131,7 +144,7 @@ export function SignInPage({ role = ROLES.OPERATOR, notice = "", onSignedIn }) {
                 type="tel"
                 autoComplete="tel"
                 value={phone}
-                onChange={(event) => setPhone(event.target.value)}
+                onChange={(event) => edit("phone", event.target.value)}
                 maxLength={40}
                 placeholder="+237 6 00 00 00 00"
               />
@@ -140,14 +153,15 @@ export function SignInPage({ role = ROLES.OPERATOR, notice = "", onSignedIn }) {
           <TextInput
             label="Username"
             hint={
-              mode === "register"
+              mode === REGISTER
                 ? "3–40 characters: lowercase letters, numbers, dot, dash or underscore."
                 : undefined
             }
             name="username"
             autoComplete="username"
             value={username}
-            onChange={(event) => setUsername(event.target.value)}
+            onChange={(event) => edit("username", event.target.value)}
+            error={fieldErrors.username}
             required
             minLength={3}
             maxLength={40}
@@ -156,19 +170,20 @@ export function SignInPage({ role = ROLES.OPERATOR, notice = "", onSignedIn }) {
 
           <TextInput
             label="Password"
-            hint={mode === "register" ? "At least 8 characters." : undefined}
+            hint={mode === REGISTER ? `At least ${MIN_PASSWORD_LENGTH} characters.` : undefined}
             name="password"
             type="password"
-            autoComplete={mode === "register" ? "new-password" : "current-password"}
+            autoComplete={mode === REGISTER ? "new-password" : "current-password"}
             value={password}
-            onChange={(event) => setPassword(event.target.value)}
+            onChange={(event) => edit("password", event.target.value)}
+            error={fieldErrors.password}
             required
-            minLength={mode === "register" ? 8 : 1}
+            minLength={mode === REGISTER ? MIN_PASSWORD_LENGTH : 1}
             maxLength={128}
           />
 
           {error ? (
-            <Alert tone="danger" title="We could not sign you in">
+            <Alert tone="danger" title={mode === REGISTER ? "We could not create the account" : "We could not sign you in"}>
               {error}
             </Alert>
           ) : null}
@@ -179,30 +194,32 @@ export function SignInPage({ role = ROLES.OPERATOR, notice = "", onSignedIn }) {
             block
             size="lg"
             busy={busy}
-            icon={mode === "register" ? UserPlus : LogIn}
+            icon={mode === REGISTER ? UserPlus : LogIn}
           >
-            {mode === "register" ? "Create account" : "Sign in"}
+            {mode === REGISTER ? "Create account" : "Sign in"}
           </Button>
         </form>
 
         <div className="auth__footer">
           {canRegister ? (
             <p>
-              {mode === "register" ? "Already have an account?" : "New to PowerWatch?"}{" "}
+              {mode === REGISTER ? "Already have an account?" : "New to PowerWatch?"}{" "}
               <button
                 type="button"
                 className="auth__switch"
                 onClick={() => {
-                  setMode(mode === "register" ? "signin" : "register");
+                  setMode(toggleMode(mode));
                   setError("");
+                  setFieldErrors({});
                 }}
               >
-                {mode === "register" ? "Sign in instead" : "Create a citizen account"}
+                {mode === REGISTER ? "Sign in instead" : "Create a citizen account"}
               </button>
             </p>
           ) : (
             <p>
-              Staff accounts are created by a SOCADEL administrator. If you cannot sign in, contact the operations desk.
+              Staff accounts are created by a SOCADEL administrator. If you cannot sign in, contact the
+              operations desk.
             </p>
           )}
           <p>

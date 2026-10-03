@@ -11,6 +11,7 @@
  */
 
 const { recalcCluster } = require("../domain/clustering");
+const { distanceMeters } = require("../domain/geo");
 
 const clone = value => (value === undefined ? value : JSON.parse(JSON.stringify(value)));
 const nowIso = () => new Date().toISOString();
@@ -342,6 +343,24 @@ class MemoryStore {
 
   // ---- zones --------------------------------------------------------------
   async listZones() { return clone(this.state.zones); }
+
+  /**
+   * The zone whose circle contains a point.
+   *
+   * The PostgreSQL store answers this with a PostGIS `ST_DWithin` query; here the
+   * same arithmetic runs over the (small) zone table so both engines agree.
+   */
+  async findZoneForPoint(point) {
+    const latitude = Number(point && point.latitude);
+    const longitude = Number(point && point.longitude);
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+    let best = null;
+    for (const zone of this.state.zones) {
+      const distance = distanceMeters(latitude, longitude, Number(zone.latitude), Number(zone.longitude));
+      if (distance <= Number(zone.radius_m) && (!best || distance < best.distance)) best = { zone, distance };
+    }
+    return best ? clone(best.zone) : null;
+  }
 
   async createZone(data) {
     this.assertZoneNameFree(data.name);

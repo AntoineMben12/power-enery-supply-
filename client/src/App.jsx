@@ -7,6 +7,7 @@
  * experience that anyone can use without signing in.
  */
 
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AppProvider, useApp } from "./app/AppContext.jsx";
 import { ToastProvider } from "./components/ui/index.js";
 import { ROLES, roleForPath } from "./lib/session.js";
@@ -29,8 +30,9 @@ function BootScreen() {
 }
 
 function Workspaces() {
+  const location = useLocation();
   const { user, signIn, authNotice, feedLoading, feedError } = useApp();
-  const required = roleForPath(window.location.pathname);
+  const required = roleForPath(location.pathname);
   const role = user?.role || user?.user_role || null;
 
   // A route that needs a role the account does not hold goes to sign-in, with the
@@ -44,9 +46,15 @@ function Workspaces() {
     return <BootScreen />;
   }
 
-  if (required === ROLES.OPERATOR) return <AdminApp />;
-  if (required === ROLES.AGENT) return <AgentApp />;
-  return <CitizenApp requireAuth={required === ROLES.CITIZEN} />;
+  return (
+    <Routes>
+      <Route path="/" element={<CitizenApp requireAuth={false} />} />
+      <Route path="/client/*" element={<CitizenApp requireAuth />} />
+      <Route path="/agency/*" element={<AgentApp />} />
+      <Route path="/admin/*" element={<AdminApp />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
 }
 
 export default function App() {

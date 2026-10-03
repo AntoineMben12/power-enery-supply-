@@ -1,7 +1,7 @@
 /**
  * Form primitives.
  *
- * Labels are always visible — never replaced by a placeholder. Errors are tied
+ * Labels are always visible ??? never replaced by a placeholder. Errors are tied
  * to the control through aria-describedby and aria-invalid, so screen readers
  * announce the problem as well as sighted users seeing it.
  */
@@ -47,17 +47,19 @@ export function Field({ id, label, hint, error, required = false, children, clas
 }
 
 /** Internal helper: derives ids and passes the a11y attributes down. */
-function useFieldIds(idProp, hasLabel) {
+function useFieldIds(idProp) {
   const generated = useId();
-  const id = idProp || `field-${generated.replace(/[:]/g, "")}`;
-  return { id, hasLabel };
+  // React's generated ids contain characters that are awkward in CSS selectors and
+  // in `aria-describedby` lists, so only safe id characters are kept.
+  const id = idProp || `field-${String(generated).replace(/[^A-Za-z0-9_-]/g, "")}`;
+  return { id };
 }
 
 export const TextInput = forwardRef(function TextInput(
   { label, hint, error, required, id: idProp, className, ...rest },
   ref
 ) {
-  const { id } = useFieldIds(idProp, Boolean(label));
+  const { id } = useFieldIds(idProp);
   const errorId = error ? `${id}-error` : undefined;
   const hintId = hint ? `${id}-hint` : undefined;
 
@@ -87,7 +89,7 @@ export const Select = forwardRef(function Select(
   { label, hint, error, required, id: idProp, className, children, ...rest },
   ref
 ) {
-  const { id } = useFieldIds(idProp, Boolean(label));
+  const { id } = useFieldIds(idProp);
   const errorId = error ? `${id}-error` : undefined;
   const hintId = hint ? `${id}-hint` : undefined;
 
@@ -112,7 +114,7 @@ export const Textarea = forwardRef(function Textarea(
   { label, hint, error, required, id: idProp, className, rows = 4, ...rest },
   ref
 ) {
-  const { id } = useFieldIds(idProp, Boolean(label));
+  const { id } = useFieldIds(idProp);
   const errorId = error ? `${id}-error` : undefined;
   const hintId = hint ? `${id}-hint` : undefined;
 
@@ -133,7 +135,7 @@ export const Textarea = forwardRef(function Textarea(
 });
 
 export const Checkbox = forwardRef(function Checkbox({ label, id: idProp, className, ...rest }, ref) {
-  const { id } = useFieldIds(idProp, Boolean(label));
+  const { id } = useFieldIds(idProp);
   return (
     <label className={["checkbox", className].filter(Boolean).join(" ")} htmlFor={id}>
       <input ref={ref} id={id} type="checkbox" {...rest} />

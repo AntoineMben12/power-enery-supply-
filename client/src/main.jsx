@@ -6,6 +6,7 @@
  * file rather than an application.
  */
 
+import { BrowserRouter } from "react-router-dom";
 import { createRoot } from "react-dom/client";
 import { setWorkerUrl } from "maplibre-gl";
 import mapLibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
@@ -20,5 +21,9 @@ import App from "./App.jsx";
 setWorkerUrl(mapLibreWorkerUrl);
 
 const container = document.getElementById("root");
-createRoot(container).render(<App />);
+createRoot(container).render(
+  <BrowserRouter>
+    <App />
+  </BrowserRouter>
+);
 

@@ -23,6 +23,24 @@ const crypto = require("crypto");
 const env = {
   nodeEnv: process.env.NODE_ENV || "development",
   port: integer("PORT", 4000),
+  /**
+   * Authoritative MVP database: PostgreSQL with PostGIS.
+   *
+   * `DATABASE_URL` wins when present (the form managed hosts inject), otherwise
+   * the discrete PG_* variables are used. Everything is optional so the app
+   * still boots on the in-memory store when no database is configured.
+   */
+  postgres: {
+    connectionString: String(process.env.DATABASE_URL || "").trim(),
+    host: process.env.PG_HOST || process.env.POSTGRES_HOST || "localhost",
+    port: integer("PG_PORT", 5432),
+    user: process.env.PG_USER || process.env.POSTGRES_USER || "postgres",
+    password: process.env.PG_PASSWORD || process.env.POSTGRES_PASSWORD || "",
+    database: process.env.PG_DATABASE || process.env.POSTGRES_DB || "powerwatch",
+    /** Managed Postgres usually requires TLS; local installs usually do not. */
+    ssl: process.env.PGSSL === "true" || process.env.PG_SSL === "true",
+    max: integer("PG_POOL_MAX", 10)
+  },
   mysql: {
     host: process.env.MYSQL_HOST || "localhost",
     port: integer("MYSQL_PORT", 3306),
@@ -69,17 +87,19 @@ const env = {
 
 /**
  * Storage selection.
- *   auto   — use MySQL when reachable, otherwise fall back to memory (default)
- *   mysql  — require MySQL; fail fast if it is unavailable
- *   memory — never touch the database (demo, CI, unit tests)
+ *   auto     — use PostgreSQL when reachable, then MySQL, otherwise memory (default)
+ *   postgres — require PostgreSQL; fail fast if it is unavailable
+ *   mysql    — require MySQL; fail fast if it is unavailable
+ *   memory   — never touch the database (demo, CI, unit tests)
  */
 const driver = String(process.env.STORAGE_DRIVER || "auto").trim().toLowerCase();
 
 const config = {
   ...env,
   db: { ...env.mysql, bootstrap: process.env.DB_BOOTSTRAP !== "false" },
+  pg: { ...env.postgres, bootstrap: process.env.DB_BOOTSTRAP !== "false" },
   storage: {
-    driver: ["auto", "mysql", "memory"].includes(driver) ? driver : "auto",
+    driver: ["auto", "postgres", "mysql", "memory"].includes(driver) ? driver : "auto",
     strict: process.env.STORAGE_STRICT === "true" || (env.nodeEnv === "production" && driver !== "memory")
   }
 };

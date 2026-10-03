@@ -265,6 +265,9 @@ export function byOperationalPriority(a, b) {
   if (activeDiff) return activeDiff;
   const severityDiff = severityLevel(b.severity) - severityLevel(a.severity);
   if (severityDiff) return severityDiff;
-  return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+  // `last_report_at` is present on both the public and the console projection,
+  // so it is the reliable recency tiebreaker regardless of which feed is in use.
+  const stamp = (row) => new Date(row.last_report_at || row.updated_at || row.created_at || 0).getTime();
+  return stamp(b) - stamp(a);
 }
 
